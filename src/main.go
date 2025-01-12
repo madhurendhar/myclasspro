@@ -173,6 +173,14 @@ func main() {
 		return c.JSON(user)
 	})
 
+	api.Get("/calendar", cache.New(cacheConfig), func(c *fiber.Ctx) error {
+		cal, err := handlers.GetCalendar(c.Get("X-CSRF-Token"))
+		if err != nil {
+			return err
+		}
+		return c.JSON(cal)
+	})
+
 	log.Println("Server starting on :8080")
 	log.Fatal(app.Listen(":8080"))
 }
