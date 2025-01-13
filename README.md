@@ -39,10 +39,10 @@ goscraper
    reflex -r '\.go' -s -- sh -c 'clear; go run src/main.go'
    ```
 
-## Usage
-
-- Send a GET request to the API endpoint to fetch and parse HTML from a specified URL.
-- The API will return the extracted data in a structured format.
+## Docker file
+```
+docker compose up --build
+```
 
 ## Contributing
 

@@ -183,6 +183,14 @@ func main() {
 		return c.JSON(cal)
 	})
 
+	api.Get("/timetable", cache.New(cacheConfig), func(c *fiber.Ctx) error {
+		tt, err := handlers.GetTimetable(c.Get("X-CSRF-Token"))
+		if err != nil {
+			return err
+		}
+		return c.JSON(tt)
+	})
+
 	port := os.Getenv("PORT")
 	if port == "" {
 		port = "8080"

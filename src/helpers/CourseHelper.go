@@ -157,7 +157,7 @@ func (c *CoursePage) parseCourseRow(cells *goquery.Selection) *types.Course {
 
 	return &types.Course{
 		Code:           code,
-		Title:          title,
+		Title:          strings.Split(title, " \\u2013")[0],
 		Credit:         credit,
 		Category:       category,
 		CourseCategory: courseCategory,
