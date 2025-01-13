@@ -4,9 +4,10 @@ import (
 	"fmt"
 	"goscraper/src/types"
 	"goscraper/src/utils"
+	"regexp"
 	"strings"
 	"time"
-	"regexp"
+
 	"github.com/PuerkitoBio/goquery"
 	"github.com/valyala/fasthttp"
 )
@@ -23,7 +24,7 @@ func NewAcademicsFetch(cookie string) *AcademicsFetch {
 
 func (a *AcademicsFetch) getHTML() (string, error) {
 	start := time.Now()
-	
+
 	req := fasthttp.AcquireRequest()
 	defer fasthttp.ReleaseRequest(req)
 

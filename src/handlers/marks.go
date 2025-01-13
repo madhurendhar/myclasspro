@@ -2,8 +2,8 @@ package handlers
 
 import (
 	"goscraper/src/helpers"
-	"log"
 	"goscraper/src/types"
+	"log"
 )
 
 func GetMarks(token string) (*types.MarksResponse, error) {
@@ -14,6 +14,5 @@ func GetMarks(token string) (*types.MarksResponse, error) {
 	}
 
 	return marks, nil
-
 
 }

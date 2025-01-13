@@ -7,7 +7,6 @@ import (
 	"strings"
 )
 
-// ConvertHexToHTML converts hex-encoded strings to their HTML representation
 func ConvertHexToHTML(hexString string) string {
 	if hexString == "" {
 		return ""
@@ -23,7 +22,6 @@ func ConvertHexToHTML(hexString string) string {
 	})
 }
 
-// DecodeHTMLEntities converts HTML entities to their corresponding characters
 func DecodeHTMLEntities(encodedString string) string {
 	if encodedString == "" {
 		return ""
@@ -63,7 +61,6 @@ func DecodeHTMLEntities(encodedString string) string {
 	})
 }
 
-// DecodeEscapeCharacters converts common escape sequences to their literal characters
 func DecodeEscapeCharacters(input string) string {
 	if input == "" {
 		return ""
@@ -73,7 +70,7 @@ func DecodeEscapeCharacters(input string) string {
 		"\r": "",
 		"\t": "",
 		"\"": "",
-		"'": "",
+		"'":  "",
 		"\\": "",
 	}
 
@@ -84,16 +81,12 @@ func DecodeEscapeCharacters(input string) string {
 	return result
 }
 
-
-
-// ExtractCookies formats specific cookies from a cookie string
 func ExtractCookies(cookieStr string) string {
 	iamadt := GetCookie(cookieStr, "_iamadt_client_10002227248")
 	iambdt := GetCookie(cookieStr, "_iambdt_client_10002227248")
 	return fmt.Sprintf("_iamadt_client_10002227248=%s; _iambdt_client_10002227248=%s;", iamadt, iambdt)
 }
 
-// GetCookie extracts a specific cookie value by name from a cookie string
 func GetCookie(cookieStr, name string) string {
 	re := regexp.MustCompile(name + `=([^;]+)`)
 	matches := re.FindStringSubmatch(cookieStr)

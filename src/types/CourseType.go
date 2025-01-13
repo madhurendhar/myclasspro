@@ -15,6 +15,6 @@ type Course struct {
 }
 
 type CourseResponse struct {
-    RegNumber string   `json:"regNumber"`
-    Courses   []Course `json:"courses"`
+	RegNumber string   `json:"regNumber"`
+	Courses   []Course `json:"courses"`
 }

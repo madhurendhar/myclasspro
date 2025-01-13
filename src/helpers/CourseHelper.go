@@ -4,9 +4,10 @@ import (
 	"fmt"
 	"goscraper/src/types"
 	"goscraper/src/utils"
+	"regexp"
 	"strings"
 	"time"
-	"regexp"
+
 	"github.com/PuerkitoBio/goquery"
 	"github.com/valyala/fasthttp"
 )
@@ -80,7 +81,7 @@ func (c *CoursePage) GetPage() (string, error) {
 
 func (c *CoursePage) GetCourses() (*types.CourseResponse, error) {
 	page, err := c.GetPage()
-	
+
 	if err != nil {
 		return nil, fmt.Errorf("failed to get user: %v", err)
 	}
@@ -93,7 +94,6 @@ func (c *CoursePage) GetCourses() (*types.CourseResponse, error) {
 	html = "<td>1</td>" + strings.Split(html, "<td>1</td>")[1]
 	html = strings.Split(html, "</tbody>")[0]
 	html = `<table style="font-size :16px;" border="1" align="center" cellpadding="1" cellspacing="1" bgcolor="#FAFAD2">` + html + "</table>"
-
 
 	doc, err := goquery.NewDocumentFromReader(strings.NewReader(html))
 	if err != nil {
@@ -153,9 +153,7 @@ func (c *CoursePage) parseCourseRow(cells *goquery.Selection) *types.Course {
 	} else {
 		room = strings.ToUpper(room[:1]) + room[1:]
 	}
-	if strings.HasSuffix(slot, "-") {
-		slot = slot[:len(slot)-1]
-	}
+	slot = strings.TrimSuffix(slot, "-")
 
 	return &types.Course{
 		Code:           code,

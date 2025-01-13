@@ -4,7 +4,6 @@ import (
 	"fmt"
 )
 
-
 func ParseFloat(s string) float64 {
 	var f float64
 	_, err := fmt.Sscanf(s, "%f", &f)
@@ -13,7 +12,6 @@ func ParseFloat(s string) float64 {
 	}
 	return f
 }
-
 
 func ParseInt(s string) int {
 	var i int

@@ -2,8 +2,8 @@ package handlers
 
 import (
 	"goscraper/src/helpers"
-	"log"
 	"goscraper/src/types"
+	"log"
 )
 
 func GetUser(token string) (*types.User, error) {
@@ -19,6 +19,5 @@ func GetUser(token string) (*types.User, error) {
 	}
 
 	return user, nil
-
 
 }

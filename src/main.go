@@ -2,6 +2,12 @@ package main
 
 import (
 	"encoding/json"
+	"goscraper/src/handlers"
+	"goscraper/src/utils"
+	"log"
+	"os"
+	"time"
+
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/cache"
 	"github.com/gofiber/fiber/v2/middleware/compress"
@@ -9,10 +15,6 @@ import (
 	"github.com/gofiber/fiber/v2/middleware/etag"
 	"github.com/gofiber/fiber/v2/middleware/limiter"
 	"github.com/gofiber/fiber/v2/middleware/recover"
-	"goscraper/src/handlers"
-	"goscraper/src/utils"
-	"log"
-	"time"
 )
 
 func main() {
@@ -77,6 +79,28 @@ func main() {
 		return c.Next()
 	})
 
+	// Add cache middleware configuration
+	cacheConfig := cache.Config{
+		Next: func(c *fiber.Ctx) bool {
+			return c.Method() != "GET"
+		},
+		Expiration: 2 * time.Minute,
+		KeyGenerator: func(c *fiber.Ctx) string {
+			return c.Path() + "_" + c.Get("X-CSRF-Token")
+		},
+	}
+
+	// Route group for authenticated endpoints
+	api := app.Group("/", func(c *fiber.Ctx) error {
+		token := c.Get("X-CSRF-Token")
+		if token == "" {
+			return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+				"error": "Missing X-CSRF-Token header",
+			})
+		}
+		return c.Next()
+	})
+
 	// Routes
 	app.Get("/hello", func(c *fiber.Ctx) error {
 		return c.JSON(fiber.Map{"message": "Hello, World!"})
@@ -107,28 +131,6 @@ func main() {
 		}
 
 		return c.JSON(session)
-	})
-
-	// Add cache middleware configuration
-	cacheConfig := cache.Config{
-		Next: func(c *fiber.Ctx) bool {
-			return c.Method() != "GET"
-		},
-		Expiration: 2 * time.Minute,
-		KeyGenerator: func(c *fiber.Ctx) string {
-			return c.Path() + "_" + c.Get("X-CSRF-Token")
-		},
-	}
-
-	// Route group for authenticated endpoints
-	api := app.Group("/", func(c *fiber.Ctx) error {
-		token := c.Get("X-CSRF-Token")
-		if token == "" {
-			return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-				"error": "Missing X-CSRF-Token header",
-			})
-		}
-		return c.Next()
 	})
 
 	api.Delete("/logout", func(c *fiber.Ctx) error {
@@ -181,6 +183,13 @@ func main() {
 		return c.JSON(cal)
 	})
 
-	log.Println("Server starting on :8080")
-	log.Fatal(app.Listen(":8080"))
+	port := os.Getenv("PORT")
+	if port == "" {
+		port = "8080"
+	}
+	log.Printf("Starting server on port %s...", port)
+	if err := app.Listen("0.0.0.0:" + port); err != nil {
+		log.Printf("Server error: %+v", err)
+		log.Fatal(err)
+	}
 }

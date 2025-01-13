@@ -16,5 +16,4 @@ func GetCalendar(token string) (*types.CalendarResponse, error) {
 
 	return calendar, nil
 
-
 }
