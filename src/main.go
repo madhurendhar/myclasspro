@@ -2,12 +2,14 @@ package main
 
 import (
 	"encoding/json"
+	"fmt"
 	"goscraper/src/handlers"
 	"goscraper/src/helpers"
 	"goscraper/src/types"
 	"goscraper/src/utils"
 	"log"
 	"os"
+	"strings"
 	"time"
 
 	"github.com/gofiber/fiber/v2"
@@ -76,6 +78,52 @@ func main() {
 				"error": "Missing X-CSRF-Token header",
 			})
 		}
+		return c.Next()
+	})
+
+	app.Use(func(c *fiber.Ctx) error {
+		token := c.Get("Authorization")
+		if token == "" || (!strings.HasPrefix(token, "Bearer ") && !strings.HasPrefix(token, "Token ")) {
+			return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
+				"error": "Missing Authorization header",
+			})
+		}
+
+		if strings.HasPrefix(token, "Token ") {
+			tokenStr := strings.TrimPrefix(token, "Token ")
+			decodedData, err := utils.DecodeBase64(tokenStr)
+			if err != nil {
+				return c.Status(fiber.StatusForbidden).JSON(fiber.Map{
+					"error": "Invalid token: " + tokenStr,
+				})
+			}
+
+			parts := strings.Split(decodedData, ".")
+			if len(parts) < 4 {
+				return c.Status(fiber.StatusForbidden).JSON(fiber.Map{
+					"error": "Malformed token: " + tokenStr,
+				})
+			}
+
+			key, _, _, _ := parts[0], parts[1], parts[2], parts[3]
+
+			valid, err := utils.ValidateAuth(fmt.Sprint(time.Now().UnixNano()/int64(time.Millisecond)), key)
+			if err != nil || !*valid {
+				return c.Status(fiber.StatusForbidden).JSON(fiber.Map{
+					"error": "Invalid token: " + tokenStr,
+				})
+			}
+		} else {
+			tokenStr := strings.TrimPrefix(token, "Bearer ")
+			println(tokenStr)
+			valid, err := utils.ValidateToken(tokenStr)
+			if err != nil || !*valid {
+				return c.Status(fiber.StatusForbidden).JSON(fiber.Map{
+					"error": "Invalid token: " + tokenStr,
+				})
+			}
+		}
+
 		return c.Next()
 	})
 
@@ -211,7 +259,7 @@ func main() {
 			}()
 			return c.JSON(cal)
 		}
-	
+
 		return c.JSON(dbcal)
 
 	})

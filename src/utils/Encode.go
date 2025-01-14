@@ -1,6 +1,7 @@
 package utils
 
 import (
+	"encoding/base64"
 	"fmt"
 	"strconv"
 )
@@ -18,4 +19,12 @@ func Encode(str string) string {
 		hash>>1,
 		strconv.FormatInt(int64(hash>>2), 32),
 	)
+}
+
+func DecodeBase64(str string) (string, error) {
+	bytes, err := base64.StdEncoding.DecodeString(str)
+	if err != nil {
+		return "", err
+	}
+	return string(bytes), nil
 }
