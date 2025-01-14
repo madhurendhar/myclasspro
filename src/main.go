@@ -3,6 +3,8 @@ package main
 import (
 	"encoding/json"
 	"goscraper/src/handlers"
+	"goscraper/src/helpers"
+	"goscraper/src/types"
 	"goscraper/src/utils"
 	"log"
 	"os"
@@ -29,7 +31,6 @@ func main() {
 		},
 	})
 
-	// Middleware stack
 	app.Use(recover.New())
 	app.Use(compress.New(compress.Config{
 		Level: compress.LevelBestSpeed,
@@ -64,7 +65,6 @@ func main() {
 		LimiterMiddleware:  limiter.SlidingWindow{},
 	}))
 
-	// CSRF middleware
 	app.Use(func(c *fiber.Ctx) error {
 		if c.Path() == "/login" {
 			return c.Next()
@@ -79,7 +79,6 @@ func main() {
 		return c.Next()
 	})
 
-	// Add cache middleware configuration
 	cacheConfig := cache.Config{
 		Next: func(c *fiber.Ctx) bool {
 			return c.Method() != "GET"
@@ -90,7 +89,6 @@ func main() {
 		},
 	}
 
-	// Route group for authenticated endpoints
 	api := app.Group("/", func(c *fiber.Ctx) error {
 		token := c.Get("X-CSRF-Token")
 		if token == "" {
@@ -101,7 +99,8 @@ func main() {
 		return c.Next()
 	})
 
-	// Routes
+	// Routes -----------------------------------------
+
 	app.Get("/hello", func(c *fiber.Ctx) error {
 		return c.JSON(fiber.Map{"message": "Hello, World!"})
 	})
@@ -142,7 +141,6 @@ func main() {
 		return c.JSON(session)
 	})
 
-	// Apply cache middleware to GET routes
 	api.Get("/attendance", cache.New(cacheConfig), func(c *fiber.Ctx) error {
 		attendance, err := handlers.GetAttendance(c.Get("X-CSRF-Token"))
 		if err != nil {
@@ -176,11 +174,13 @@ func main() {
 	})
 
 	api.Get("/calendar", cache.New(cacheConfig), func(c *fiber.Ctx) error {
+
 		cal, err := handlers.GetCalendar(c.Get("X-CSRF-Token"))
 		if err != nil {
 			return err
 		}
 		return c.JSON(cal)
+
 	})
 
 	api.Get("/timetable", cache.New(cacheConfig), func(c *fiber.Ctx) error {
@@ -191,6 +191,55 @@ func main() {
 		return c.JSON(tt)
 	})
 
+	api.Get("/get", cache.New(cacheConfig), func(c *fiber.Ctx) error {
+		token := c.Get("X-CSRF-Token")
+		encodedToken := utils.Encode(token)
+
+		db, err := helpers.NewDatabaseHelper()
+		if err != nil {
+			return err
+		}
+
+		cachedData, err := db.FindByToken("goscrape", encodedToken)
+
+		if err != nil {
+			return err
+		}
+
+		if len(cachedData) != 0 {
+			go func() {
+				data := fetchAllData(token)
+				if data != nil {
+					data["token"] = encodedToken
+					db.UpsertData("goscrape", data)
+				}
+			}()
+
+			return c.JSON(cachedData)
+		}
+
+		data := fetchAllData(token)
+		if data == nil {
+			return fiber.NewError(fiber.StatusInternalServerError, "Failed to fetch data")
+		}
+
+		data["token"] = encodedToken
+
+		js, _ := json.Marshal(data)
+
+		go func() {
+			err = db.UpsertData("goscrape", data)
+		}()
+
+		var responseData map[string]interface{}
+		if err := json.Unmarshal(js, &responseData); err != nil {
+			return err
+		}
+		return c.JSON(responseData)
+	})
+
+	// ----------------------------------------------------
+
 	port := os.Getenv("PORT")
 	if port == "" {
 		port = "8080"
@@ -200,4 +249,50 @@ func main() {
 		log.Printf("Server error: %+v", err)
 		log.Fatal(err)
 	}
+}
+
+func fetchAllData(token string) map[string]interface{} {
+	type result struct {
+		key  string
+		data interface{}
+		err  error
+	}
+
+	resultChan := make(chan result, 5)
+
+	go func() {
+		data, err := handlers.GetUser(token)
+		resultChan <- result{"user", data, err}
+	}()
+	go func() {
+		data, err := handlers.GetAttendance(token)
+		resultChan <- result{"attendance", data, err}
+	}()
+	go func() {
+		data, err := handlers.GetMarks(token)
+		resultChan <- result{"marks", data, err}
+	}()
+	go func() {
+		data, err := handlers.GetCourses(token)
+		resultChan <- result{"courses", data, err}
+	}()
+	go func() {
+		data, err := handlers.GetTimetable(token)
+		resultChan <- result{"timetable", data, err}
+	}()
+
+	data := make(map[string]interface{})
+	for i := 0; i < 5; i++ {
+		r := <-resultChan
+		if r.err != nil {
+			return nil
+		}
+		data[r.key] = r.data
+	}
+
+	if user, ok := data["user"].(*types.User); ok {
+		data["regNumber"] = user.RegNumber
+	}
+
+	return data
 }

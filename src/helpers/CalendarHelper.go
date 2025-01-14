@@ -162,20 +162,16 @@ func (c *CalendarFetcher) parseCalendar(html string) (*types.CalendarResponse, e
 func sortCalendarData(data []types.CalendarMonth) []types.CalendarMonth {
 	monthNames := []string{"Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"}
 
-	// Create a map of month names to their indices for sorting
 	monthIndices := make(map[string]int)
 	for i, month := range monthNames {
 		monthIndices[month] = i
 	}
 
-	// Sort the data slice based on month names
 	for i := 0; i < len(data)-1; i++ {
 		for j := 0; j < len(data)-i-1; j++ {
-			// Extract month names from the entries
 			month1 := strings.Split(data[j].Month, "'")[0][:3]
 			month2 := strings.Split(data[j+1].Month, "'")[0][:3]
 
-			// Compare months using their indices
 			if monthIndices[month1] > monthIndices[month2] {
 				data[j], data[j+1] = data[j+1], data[j]
 			}

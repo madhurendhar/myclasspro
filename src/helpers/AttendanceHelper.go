@@ -6,7 +6,6 @@ import (
 	"goscraper/src/utils"
 	"regexp"
 	"strings"
-	"time"
 
 	"github.com/PuerkitoBio/goquery"
 	"github.com/valyala/fasthttp"
@@ -23,7 +22,6 @@ func NewAcademicsFetch(cookie string) *AcademicsFetch {
 }
 
 func (a *AcademicsFetch) getHTML() (string, error) {
-	start := time.Now()
 
 	req := fasthttp.AcquireRequest()
 	defer fasthttp.ReleaseRequest(req)
@@ -53,12 +51,10 @@ func (a *AcademicsFetch) getHTML() (string, error) {
 	}
 
 	htmlHex := strings.Split(parts[1], "')")[0]
-	fmt.Printf("HTML fetch took: %v\n", time.Since(start))
 	return utils.ConvertHexToHTML(htmlHex), nil
 }
 
 func (a *AcademicsFetch) GetAttendance() (*types.AttendanceResponse, error) {
-	totalStart := time.Now()
 
 	html, err := a.getHTML()
 	if err != nil {
@@ -70,12 +66,10 @@ func (a *AcademicsFetch) GetAttendance() (*types.AttendanceResponse, error) {
 
 	result, err := a.ScrapeAttendance(html)
 
-	fmt.Printf("Total attendance fetch and process took: %v\n", time.Since(totalStart))
 	return result, err
 }
 
 func (a *AcademicsFetch) GetMarks() (*types.MarksResponse, error) {
-	totalStart := time.Now()
 
 	html, err := a.getHTML()
 	if err != nil {
@@ -87,12 +81,10 @@ func (a *AcademicsFetch) GetMarks() (*types.MarksResponse, error) {
 
 	result, err := a.ScrapeMarks(html)
 
-	fmt.Printf("Total attendance fetch and process took: %v\n", time.Since(totalStart))
 	return result, err
 }
 
 func (a *AcademicsFetch) ScrapeAttendance(html string) (*types.AttendanceResponse, error) {
-	start := time.Now()
 	re := regexp.MustCompile(`RA2\d{12}`)
 	regNumber := re.FindString(html)
 	html = strings.ReplaceAll(html, "<td  bgcolor='#E6E6FA' style='text-align:center'> - </td>", "")
@@ -145,7 +137,6 @@ func (a *AcademicsFetch) ScrapeAttendance(html string) (*types.AttendanceRespons
 		}
 	})
 
-	fmt.Printf("Attendance scraping took: %v\n", time.Since(start))
 	return &types.AttendanceResponse{
 		RegNumber:  regNumber,
 		Attendance: attendances,
@@ -154,13 +145,11 @@ func (a *AcademicsFetch) ScrapeAttendance(html string) (*types.AttendanceRespons
 }
 
 func (a *AcademicsFetch) ScrapeMarks(html string) (*types.MarksResponse, error) {
-	start := time.Now()
 	doc, err := goquery.NewDocumentFromReader(strings.NewReader(html))
 	if err != nil {
 		return nil, fmt.Errorf("failed to parse HTML: %v", err)
 	}
 
-	// Get attendance first for course mapping
 	attResp, err := a.ScrapeAttendance(html)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get attendance for course mapping: %v", err)
@@ -189,7 +178,7 @@ func (a *AcademicsFetch) ScrapeMarks(html string) (*types.MarksResponse, error) 
 	}
 
 	targetTable.Find("tr").Each(func(i int, row *goquery.Selection) {
-		if i == 0 { // Skip header row
+		if i == 0 {
 			return
 		}
 
@@ -239,7 +228,6 @@ func (a *AcademicsFetch) ScrapeMarks(html string) (*types.MarksResponse, error) 
 		marks = append(marks, mark)
 	})
 
-	// Sort marks by course type (Theory first, then Practical)
 	var sortedMarks []types.Mark
 	for _, mark := range marks {
 		if mark.CourseType == "Theory" {
@@ -252,7 +240,6 @@ func (a *AcademicsFetch) ScrapeMarks(html string) (*types.MarksResponse, error) 
 		}
 	}
 
-	fmt.Printf("Marks scraping took: %v\n", time.Since(start))
 	return &types.MarksResponse{
 		RegNumber: attResp.RegNumber,
 		Marks:     sortedMarks,

@@ -2,11 +2,12 @@ package helpers
 
 import (
 	"fmt"
-	"github.com/PuerkitoBio/goquery"
 	"goscraper/src/types"
 	"goscraper/src/utils"
 	"regexp"
 	"strings"
+
+	"github.com/PuerkitoBio/goquery"
 )
 
 func GetUser(rawPage string) (*types.User, error) {
