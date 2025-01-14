@@ -115,7 +115,6 @@ func main() {
 			}
 		} else {
 			tokenStr := strings.TrimPrefix(token, "Bearer ")
-			println(tokenStr)
 			valid, err := utils.ValidateToken(tokenStr)
 			if err != nil || !*valid {
 				return c.Status(fiber.StatusForbidden).JSON(fiber.Map{

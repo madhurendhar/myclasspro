@@ -44,6 +44,8 @@ func GetUser(rawPage string) (*types.User, error) {
 				data.Name = value
 			case "Program":
 				data.Program = value
+			case "Batch":
+				data.Batch = value
 			case "Mobile":
 				data.Mobile = value
 			case "Semester":
@@ -59,6 +61,5 @@ func GetUser(rawPage string) (*types.User, error) {
 		}
 	})
 
-	data.Combo = "?"
 	return data, nil
 }

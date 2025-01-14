@@ -6,8 +6,8 @@ type User struct {
 	Program    string `json:"program"`
 	Semester   int    `json:"semester"`
 	RegNumber  string `json:"regNumber"`
+	Batch      string `json:"batch"`
 	Year       int    `json:"year"`
 	Department string `json:"department"`
 	Section    string `json:"section"`
-	Combo      string `json:"combo"`
 }
