@@ -174,12 +174,45 @@ func main() {
 	})
 
 	api.Get("/calendar", cache.New(cacheConfig), func(c *fiber.Ctx) error {
-
-		cal, err := handlers.GetCalendar(c.Get("X-CSRF-Token"))
+		db, err := helpers.NewCalDBHelper()
 		if err != nil {
 			return err
 		}
-		return c.JSON(cal)
+
+		dbcal, err := db.GetEvents()
+		if err != nil {
+			return err
+		}
+
+		if len(dbcal.Calendar) == 0 {
+			cal, err := handlers.GetCalendar(c.Get("X-CSRF-Token"))
+			if err != nil {
+				return err
+			}
+			go func() {
+				for _, event := range cal.Calendar {
+					for _, month := range event.Days {
+						err = db.SetEvent(helpers.CalendarEvent{
+							ID:        utils.GenerateID(),
+							Date:      month.Date,
+							Month:     event.Month,
+							Day:       month.Day,
+							Order:     month.DayOrder,
+							Event:     month.Event,
+							CreatedAt: time.Now().UnixNano() / int64(time.Millisecond),
+						})
+
+						if err != nil {
+							log.Printf("Error setting calendar event: %v", err)
+							return
+						}
+					}
+				}
+			}()
+			return c.JSON(cal)
+		}
+	
+		return c.JSON(dbcal)
 
 	})
 
