@@ -1,6 +1,7 @@
 package helpers
 
 import (
+	"errors"
 	"fmt"
 	"goscraper/src/types"
 	"goscraper/src/utils"
@@ -83,13 +84,23 @@ func (c *CoursePage) GetCourses() (*types.CourseResponse, error) {
 	page, err := c.GetPage()
 
 	if err != nil {
-		return nil, fmt.Errorf("failed to get user: %v", err)
+		return &types.CourseResponse{
+			Status: 500,
+			Error:  err.Error(),
+		}, err
 	}
 
 	re := regexp.MustCompile(`RA2\d{12}`)
 	regNumber := re.FindString(page)
 
-	html := strings.Split(page, `<table cellspacing="1" cellpadding="1" border="1" align="center" style="width:900px!important;" class="course_tbl">`)[1]
+	htmlParts := strings.Split(page, `<table cellspacing="1" cellpadding="1" border="1" align="center" style="width:900px!important;" class="course_tbl">`)
+	if len(htmlParts) < 2 {
+		return &types.CourseResponse{
+			Status: 500,
+			Error:  "failed to find course table in the page",
+		}, errors.New("failed to find course table in the page")
+	}
+	html := htmlParts[1]
 	html = strings.Split(html, "</table>")[0]
 	html = "<td>1</td>" + strings.Split(html, "<td>1</td>")[1]
 	html = strings.Split(html, "</tbody>")[0]
@@ -97,7 +108,10 @@ func (c *CoursePage) GetCourses() (*types.CourseResponse, error) {
 
 	doc, err := goquery.NewDocumentFromReader(strings.NewReader(html))
 	if err != nil {
-		return nil, fmt.Errorf("failed to parse HTML: %v", err)
+		return &types.CourseResponse{
+			Status: 500,
+			Error:  fmt.Sprintf("failed to parse HTML: %v", err),
+		}, nil
 	}
 
 	var courses []types.Course

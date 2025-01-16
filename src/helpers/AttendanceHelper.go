@@ -1,6 +1,7 @@
 package helpers
 
 import (
+	"errors"
 	"fmt"
 	"goscraper/src/types"
 	"goscraper/src/utils"
@@ -47,7 +48,7 @@ func (a *AcademicsFetch) getHTML() (string, error) {
 	data := string(resp.Body())
 	parts := strings.Split(data, ".sanitize('")
 	if len(parts) < 2 {
-		return "", fmt.Errorf("invalid response format")
+		return "", errors.New("attendance - invalid response format")
 	}
 
 	htmlHex := strings.Split(parts[1], "')")[0]
@@ -76,7 +77,7 @@ func (a *AcademicsFetch) GetMarks() (*types.MarksResponse, error) {
 		return &types.MarksResponse{
 			Status: 500,
 			Error:  err.Error(),
-		}, nil
+		}, err
 	}
 
 	result, err := a.ScrapeMarks(html)

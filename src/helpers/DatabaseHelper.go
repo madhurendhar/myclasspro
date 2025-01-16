@@ -99,7 +99,7 @@ func (db *DatabaseHelper) UpsertData(table string, data map[string]interface{}) 
 	data["lastUpdated"] = time.Now().UnixNano() / int64(time.Millisecond)
 
 	for key, value := range data {
-		if key != "regNumber" && key != "token" && key != "lastUpdated" && key != "timetable" {
+		if key != "regNumber" && key != "token" && key != "lastUpdated" && key != "timetable" && key != "ophour"  {
 			jsonBytes, err := json.Marshal(value)
 			if err != nil {
 				return err
@@ -142,7 +142,7 @@ func (db *DatabaseHelper) ReadData(table string, query map[string]interface{}) (
 	for _, row := range results {
 		for key, value := range row {
 			if str, ok := value.(string); ok {
-				if key != "regNumber" && key != "token" && key != "lastUpdated" && key != "timetable" {
+				if key != "regNumber" && key != "token" && key != "lastUpdated" && key != "timetable" && key != "ophour"  {
 					decrypted, err := db.decrypt(str)
 					if err != nil {
 						return nil, err
@@ -181,7 +181,7 @@ func (db *DatabaseHelper) FindByToken(table string, token string) (map[string]in
 				}
 				results[0][key] = jsonData
 			} else
-			if key != "regNumber" && key != "token" && key != "lastUpdated" && key != "timetable" {
+			if key != "regNumber" && key != "token" && key != "lastUpdated" && key != "timetable" && key != "ophour" {
 				decrypted, err := db.decrypt(str)
 				if err != nil {
 					return nil, err

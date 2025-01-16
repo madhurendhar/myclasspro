@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/json"
+
 	"fmt"
 	"goscraper/src/handlers"
 	"goscraper/src/helpers"
@@ -40,12 +41,11 @@ func main() {
 	app.Use(etag.New())
 
 	app.Use(cors.New(cors.Config{
-		AllowOrigins:     "https://class-pro.vercel.app,http://localhost:3024",
-		AllowMethods:     "GET,POST,DELETE",
-		AllowHeaders:     "Origin,Content-Type,Accept,X-CSRF-Token",
+		AllowOrigins:     "https://class-pro.vercel.app, http://localhost:243",
+		AllowMethods:     "GET,POST,PUT,DELETE,OPTIONS",
+		AllowHeaders:     "Origin,Content-Type,Accept,X-CSRF-Token,Authorization",
 		ExposeHeaders:    "Content-Length",
 		AllowCredentials: true,
-		MaxAge:           int((12 * time.Hour).Seconds()),
 	}))
 
 	app.Use(limiter.New(limiter.Config{
@@ -68,7 +68,7 @@ func main() {
 	}))
 
 	app.Use(func(c *fiber.Ctx) error {
-		if c.Path() == "/login" {
+		if c.Path() == "/login" || c.Path() == "/calendar" {
 			return c.Next()
 		}
 
@@ -126,6 +126,17 @@ func main() {
 		return c.Next()
 	})
 
+	// Universal error handling middleware
+	app.Use(func(c *fiber.Ctx) error {
+		err := c.Next()
+		if err != nil {
+			return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+				"error": err.Error(),
+			})
+		}
+		return nil
+	})
+
 	cacheConfig := cache.Config{
 		Next: func(c *fiber.Ctx) bool {
 			return c.Method() != "GET"
@@ -137,6 +148,9 @@ func main() {
 	}
 
 	api := app.Group("/", func(c *fiber.Ctx) error {
+		if c.Path() == "/calendar" || c.Path() == "/login" {
+			return c.Next()
+		}
 		token := c.Get("X-CSRF-Token")
 		if token == "" {
 			return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
@@ -158,7 +172,9 @@ func main() {
 			Password string `json:"password"`
 		}
 
+
 		if err := c.BodyParser(&creds); err != nil {
+			log.Printf("Error parsing body: %v", err)
 			return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
 				"error": "Invalid JSON body",
 			})
@@ -288,7 +304,10 @@ func main() {
 
 		if len(cachedData) != 0 {
 			go func() {
-				data := fetchAllData(token)
+				data, err := fetchAllData(token)
+				if err != nil {
+					return
+				}
 				if data != nil {
 					data["token"] = encodedToken
 					db.UpsertData("goscrape", data)
@@ -298,9 +317,9 @@ func main() {
 			return c.JSON(cachedData)
 		}
 
-		data := fetchAllData(token)
-		if data == nil {
-			return fiber.NewError(fiber.StatusInternalServerError, "Failed to fetch data")
+		data, err := fetchAllData(token)
+		if err != nil {
+			return utils.HandleError(c, err)
 		}
 
 		data["token"] = encodedToken
@@ -322,16 +341,16 @@ func main() {
 
 	port := os.Getenv("PORT")
 	if port == "" {
-		port = "8080"
+		port = "8008"
 	}
 	log.Printf("Starting server on port %s...", port)
 	if err := app.Listen("0.0.0.0:" + port); err != nil {
 		log.Printf("Server error: %+v", err)
-		log.Fatal(err)
+		log.Println(err)
 	}
 }
 
-func fetchAllData(token string) map[string]interface{} {
+func fetchAllData(token string) (map[string]interface{}, error) {
 	type result struct {
 		key  string
 		data interface{}
@@ -365,7 +384,7 @@ func fetchAllData(token string) map[string]interface{} {
 	for i := 0; i < 5; i++ {
 		r := <-resultChan
 		if r.err != nil {
-			return nil
+			return nil, r.err
 		}
 		data[r.key] = r.data
 	}
@@ -374,5 +393,5 @@ func fetchAllData(token string) map[string]interface{} {
 		data["regNumber"] = user.RegNumber
 	}
 
-	return data
+	return data, nil
 }
