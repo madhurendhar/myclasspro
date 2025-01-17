@@ -52,7 +52,7 @@ func (t *Timetable) getSlotsFromRange(slotRange string) []string {
 }
 
 func (t *Timetable) mapSlotsToSubjects(batch types.Batch, subjects []types.Course) []types.DaySchedule {
-	slotMapping := make(map[string]string)
+	slotMapping := make(map[string]types.TableSlot)
 
 	for _, subject := range subjects {
 		var slots []string
@@ -69,22 +69,25 @@ func (t *Timetable) mapSlotsToSubjects(batch types.Batch, subjects []types.Cours
 		}
 
 		for _, slot := range slots {
-			title := subject.Title
-			if isOnline {
-				title += " [Online]"
+			slotMapping[slot] = types.TableSlot{
+				Code:       subject.Code,
+				Name:       subject.Title,
+				Online:     isOnline,
+				CourseType: slotType,
+				RoomNo:     subject.Room,
+				Slot:       slot,
 			}
-			slotMapping[slot] = title + " (" + slotType + ")$[" + subject.Room + "]"
 		}
 	}
 
 	var schedule []types.DaySchedule
 	for _, day := range batch.Slots {
-		var table []string
+		var table []interface{}
 		for _, slot := range day.Slots {
 			if val, ok := slotMapping[slot]; ok {
 				table = append(table, val)
 			} else {
-				table = append(table, "")
+				table = append(table, nil)
 			}
 		}
 		schedule = append(schedule, types.DaySchedule{Day: day.Day, Table: table})

@@ -11,9 +11,18 @@ type Batch struct {
 	Slots []Slot `json:"slots"`
 }
 
+type TableSlot struct {
+	Code       string `json:"code"`
+	Name       string `json:"name"`
+	Slot       string `json:"slot"`
+	RoomNo     string `json:"roomNo"`
+	CourseType string `json:"courseType"`
+	Online     bool   `json:"online"`
+}
+
 type DaySchedule struct {
-	Day   int      `json:"day"`
-	Table []string `json:"table"`
+	Day   int         `json:"day"`
+	Table []interface{} `json:"table"`
 }
 
 type TimetableResult struct {
