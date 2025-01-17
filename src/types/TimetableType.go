@@ -18,6 +18,7 @@ type TableSlot struct {
 	RoomNo     string `json:"roomNo"`
 	CourseType string `json:"courseType"`
 	Online     bool   `json:"online"`
+	IsOptional bool   `json:"isOptional"`
 }
 
 type DaySchedule struct {
