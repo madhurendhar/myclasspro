@@ -126,7 +126,7 @@ func (c *CalendarFetcher) parseCalendar(html string) (*types.CalendarResponse, e
 	})
 
 	// Sort the calendar data
-	sortedData := sortCalendarData(data)
+	sortedData := SortCalendarData(data)
 
 	// Find current month entry
 	monthNames := []string{"Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"}
@@ -159,7 +159,7 @@ func (c *CalendarFetcher) parseCalendar(html string) (*types.CalendarResponse, e
 	}, nil
 }
 
-func sortCalendarData(data []types.CalendarMonth) []types.CalendarMonth {
+func SortCalendarData(data []types.CalendarMonth) []types.CalendarMonth {
 	monthNames := []string{"Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"}
 
 	monthIndices := make(map[string]int)

@@ -247,3 +247,4 @@ func (a *AcademicsFetch) ScrapeMarks(html string) (*types.MarksResponse, error) 
 		Status:    200,
 	}, nil
 }
+

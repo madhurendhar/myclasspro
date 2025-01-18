@@ -1,6 +1,7 @@
-package helpers
+package databases
 
 import (
+	"goscraper/src/helpers"
 	"goscraper/src/types"
 	"os"
 	"strings"
@@ -97,7 +98,7 @@ func (h *CalendarDatabaseHelper) GetEvents() (types.CalendarResponse, error) {
 		response = append(response, *month)
 	}
 
-	sortedData := sortCalendarData(response)
+	sortedData := helpers.SortCalendarData(response)
 
 	monthNames := []string{"Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"}
 	date := time.Now()
