@@ -2,6 +2,8 @@ package main
 
 import (
 	"encoding/json"
+	"fmt"
+	"strings"
 
 	// "fmt"
 	"goscraper/src/handlers"
@@ -10,6 +12,7 @@ import (
 	"goscraper/src/utils"
 	"log"
 	"os"
+
 	// "strings"
 	"time"
 
@@ -60,7 +63,8 @@ func main() {
 		},
 		LimitReached: func(c *fiber.Ctx) error {
 			return c.Status(fiber.StatusTooManyRequests).JSON(fiber.Map{
-				"error": "🔨 SHUT UP! Rate limit exceeded. Please try again later.",
+				"error":     "🔨 SHUT UP! Rate limit exceeded. Please try again later.",
+				"ratelimit": true,
 			})
 		},
 		SkipFailedRequests: false,
@@ -81,50 +85,50 @@ func main() {
 		return c.Next()
 	})
 
-	// app.Use(func(c *fiber.Ctx) error {
-	// 	token := c.Get("Authorization")
-	// 	if token == "" || (!strings.HasPrefix(token, "Bearer ") && !strings.HasPrefix(token, "Token ")) {
-	// 		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
-	// 			"error": "Missing Authorization header",
-	// 		})
-	// 	}
+	app.Use(func(c *fiber.Ctx) error {
+		token := c.Get("Authorization")
+		if token == "" || (!strings.HasPrefix(token, "Bearer ") && !strings.HasPrefix(token, "Token ")) {
+			return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
+				"error": "Missing Authorization header",
+			})
+		}
 
-	// 	if strings.HasPrefix(token, "Token ") {
-	// 		tokenStr := strings.TrimPrefix(token, "Token ")
-	// 		decodedData, err := utils.DecodeBase64(tokenStr)
-	// 		if err != nil {
-	// 			return c.Status(fiber.StatusForbidden).JSON(fiber.Map{
-	// 				"error": "Invalid token: " + tokenStr,
-	// 			})
-	// 		}
+		if strings.HasPrefix(token, "Token ") {
+			tokenStr := strings.TrimPrefix(token, "Token ")
+			decodedData, err := utils.DecodeBase64(tokenStr)
+			if err != nil {
+				return c.Status(fiber.StatusForbidden).JSON(fiber.Map{
+					"error": "Invalid token: " + tokenStr,
+				})
+			}
 
-	// 		parts := strings.Split(decodedData, ".")
-	// 		if len(parts) < 4 {
-	// 			return c.Status(fiber.StatusForbidden).JSON(fiber.Map{
-	// 				"error": "Malformed token: " + tokenStr,
-	// 			})
-	// 		}
+			parts := strings.Split(decodedData, ".")
+			if len(parts) < 4 {
+				return c.Status(fiber.StatusForbidden).JSON(fiber.Map{
+					"error": "Malformed token: " + tokenStr,
+				})
+			}
 
-	// 		key, _, _, _ := parts[0], parts[1], parts[2], parts[3]
+			key, _, _, _ := parts[0], parts[1], parts[2], parts[3]
 
-	// 		valid, err := utils.ValidateAuth(fmt.Sprint(time.Now().UnixNano()/int64(time.Millisecond)), key)
-	// 		if err != nil || !*valid {
-	// 			return c.Status(fiber.StatusForbidden).JSON(fiber.Map{
-	// 				"error": "Invalid token: " + tokenStr,
-	// 			})
-	// 		}
-	// 	} else {
-	// 		tokenStr := strings.TrimPrefix(token, "Bearer ")
-	// 		valid, err := utils.ValidateToken(tokenStr)
-	// 		if err != nil || !*valid {
-	// 			return c.Status(fiber.StatusForbidden).JSON(fiber.Map{
-	// 				"error": "Invalid token: " + tokenStr,
-	// 			})
-	// 		}
-	// 	}
+			valid, err := utils.ValidateAuth(fmt.Sprint(time.Now().UnixNano()/int64(time.Millisecond)), key)
+			if err != nil || !*valid {
+				return c.Status(fiber.StatusForbidden).JSON(fiber.Map{
+					"error": "Invalid token: " + tokenStr,
+				})
+			}
+		} else {
+			tokenStr := strings.TrimPrefix(token, "Bearer ")
+			valid, err := utils.ValidateToken(tokenStr)
+			if err != nil || !*valid {
+				return c.Status(fiber.StatusForbidden).JSON(fiber.Map{
+					"error": "Invalid token: " + tokenStr,
+				})
+			}
+		}
 
-	// 	return c.Next()
-	// })
+		return c.Next()
+	})
 
 	// Universal error handling middleware
 	app.Use(func(c *fiber.Ctx) error {
@@ -171,7 +175,6 @@ func main() {
 			Username string `json:"account"`
 			Password string `json:"password"`
 		}
-
 
 		if err := c.BodyParser(&creds); err != nil {
 			log.Printf("Error parsing body: %v", err)
