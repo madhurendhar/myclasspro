@@ -42,7 +42,7 @@ func main() {
 	app.Use(etag.New())
 
 	app.Use(cors.New(cors.Config{
-		AllowOrigins:     "https://class-pro.vercel.app, http://localhost:243",
+		AllowOrigins:     "https://class-pro.vercel.app, http://localhost:243, https://apro-beta.vercel.app",
 		AllowMethods:     "GET,POST,PUT,DELETE,OPTIONS",
 		AllowHeaders:     "Origin,Content-Type,Accept,X-CSRF-Token,Authorization",
 		ExposeHeaders:    "Content-Length",
