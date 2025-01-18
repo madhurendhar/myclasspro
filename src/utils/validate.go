@@ -8,15 +8,9 @@ import (
 	"strconv"
 	"strings"
 	"time"
-
-	"github.com/joho/godotenv"
 )
 
 func ValidateToken(token string) (*bool, error) {
-	err := godotenv.Load()
-	if err != nil {
-		return nil, err
-	}
 	validationKey := os.Getenv("VALIDATION_KEY")
 	if validationKey == "" {
 		log.Println("VALIDATION_KEY is not defined!")
@@ -50,10 +44,6 @@ func ValidateToken(token string) (*bool, error) {
 }
 
 func ValidateAuth(timestamp string, key string) (*bool, error) {
-	err := godotenv.Load()
-	if err != nil {
-		return nil, err
-	}
 	validationKey := os.Getenv("VALIDATION_KEY")
 	if validationKey == "" {
 		log.Println("VALIDATION_KEY is not defined!")

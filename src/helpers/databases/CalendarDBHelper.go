@@ -7,7 +7,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/joho/godotenv"
 	"github.com/supabase-community/supabase-go"
 )
 
@@ -25,11 +24,6 @@ type CalendarDatabaseHelper struct {
 }
 
 func NewCalDBHelper() (*CalendarDatabaseHelper, error) {
-	err := godotenv.Load()
-	if err != nil {
-		return nil, err
-	}
-
 	supabaseUrl := os.Getenv("SUPABASE_URL")
 	supabaseKey := os.Getenv("SUPABASE_KEY")
 
