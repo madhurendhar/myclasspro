@@ -84,6 +84,11 @@ func main() {
 	})
 
 	app.Use(func(c *fiber.Ctx) error {
+		switch c.Path() {
+		case "/hello":
+			return c.Next()
+		}
+
 		token := c.Get("Authorization")
 		if token == "" || (!strings.HasPrefix(token, "Bearer ") && !strings.HasPrefix(token, "Token ")) {
 			return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
