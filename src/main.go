@@ -69,7 +69,8 @@ func main() {
 	}))
 
 	app.Use(func(c *fiber.Ctx) error {
-		if c.Path() == "/login" || c.Path() == "/calendar" {
+		switch c.Path() {
+		case "/calendar", "/login", "/hello":
 			return c.Next()
 		}
 
@@ -149,7 +150,8 @@ func main() {
 	}
 
 	api := app.Group("/", func(c *fiber.Ctx) error {
-		if c.Path() == "/calendar" || c.Path() == "/login" {
+		switch c.Path() {
+		case "/calendar", "/login", "/hello":
 			return c.Next()
 		}
 		token := c.Get("X-CSRF-Token")
