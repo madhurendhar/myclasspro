@@ -194,12 +194,12 @@ func main() {
 		}
 
 		lf := &handlers.LoginFetcher{}
-		session, err := lf.Login(creds.Username, creds.Password)
+		session, err := lf.CampusLogin(creds.Username, creds.Password)
 		if err != nil {
 			return err
 		}
 
-		return c.Status(session.Status).JSON(session)
+		return c.JSON(session)
 	})
 
 	api.Delete("/logout", func(c *fiber.Ctx) error {

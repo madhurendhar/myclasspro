@@ -164,7 +164,6 @@ func (lf *LoginFetcher) Login(username, password string) (*LoginResponse, error)
 	}
 
 	if errors, ok := data["errors"].([]interface{}); ok && len(errors) > 0 {
-		errors := data["errors"].([]interface{})
 		lookupMsg := errors[0].(map[string]interface{})["message"].(string)
 		statusCode := int(data["status_code"].(float64))
 
@@ -206,7 +205,12 @@ func (lf *LoginFetcher) Login(username, password string) (*LoginResponse, error)
 	}
 
 	fmt.Println(data)
-	session, err := lf.GetSession(password, data["lookup"].(map[string]interface{}))
+	lookup, ok := data["lookup"].(map[string]interface{})
+	if !ok {
+		return nil, fmt.Errorf("invalid lookup data")
+	}
+
+	session, err := lf.GetSession(password, lookup)
 	if err != nil {
 		return nil, err
 	}
@@ -223,8 +227,8 @@ func (lf *LoginFetcher) Login(username, password string) (*LoginResponse, error)
 			Authenticated: false,
 			Session:       sessionBody,
 			Lookup: map[string]string{
-				"identifier": data["lookup"].(map[string]interface{})["identifier"].(string),
-				"digest":     data["lookup"].(map[string]interface{})["digest"].(string),
+				"identifier": lookup["identifier"].(string),
+				"digest":     lookup["digest"].(string),
 			},
 			Cookies: session["cookies"].(string),
 			Status:  int(data["status_code"].(float64)),
@@ -239,8 +243,8 @@ func (lf *LoginFetcher) Login(username, password string) (*LoginResponse, error)
 			Authenticated: false,
 			Session:       nil,
 			Lookup: map[string]string{
-				"identifier": data["lookup"].(map[string]interface{})["identifier"].(string),
-				"digest":     data["lookup"].(map[string]interface{})["digest"].(string),
+				"identifier": lookup["identifier"].(string),
+				"digest":     lookup["digest"].(string),
 			},
 			Cookies: "",
 			Status:  int(session["status_code"].(float64)),
@@ -253,8 +257,8 @@ func (lf *LoginFetcher) Login(username, password string) (*LoginResponse, error)
 		Authenticated: true,
 		Session:       sessionBody,
 		Lookup: map[string]string{
-			"identifier": data["lookup"].(map[string]interface{})["identifier"].(string),
-			"digest":     data["lookup"].(map[string]interface{})["digest"].(string),
+			"identifier": lookup["identifier"].(string),
+			"digest":     lookup["digest"].(string),
 		},
 		Cookies: session["cookies"].(string),
 		Status:  int(data["status_code"].(float64)),
