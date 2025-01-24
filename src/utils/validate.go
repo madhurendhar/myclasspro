@@ -8,9 +8,11 @@ import (
 	"strconv"
 	"strings"
 	"time"
+	"github.com/joho/godotenv"
 )
 
 func ValidateToken(token string) (*bool, error) {
+	err := godotenv.Load()
 	validationKey := os.Getenv("VALIDATION_KEY")
 	if validationKey == "" {
 		log.Println("VALIDATION_KEY is not defined!")

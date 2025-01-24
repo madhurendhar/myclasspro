@@ -199,7 +199,7 @@ func main() {
 			return err
 		}
 
-		return c.JSON(session)
+		return c.Status(session.Status).JSON(session)
 	})
 
 	api.Delete("/logout", func(c *fiber.Ctx) error {

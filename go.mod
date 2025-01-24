@@ -7,6 +7,7 @@ toolchain go1.23.2
 require (
 	github.com/PuerkitoBio/goquery v1.10.1
 	github.com/gofiber/fiber/v2 v2.52.6
+	github.com/joho/godotenv v1.5.1
 	github.com/supabase-community/supabase-go v0.0.4
 	github.com/valyala/fasthttp v1.58.0
 )
