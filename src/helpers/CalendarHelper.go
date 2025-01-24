@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"goscraper/src/types"
 	"goscraper/src/utils"
+	"strconv"
 	"strings"
 	"time"
 
@@ -177,5 +178,18 @@ func SortCalendarData(data []types.CalendarMonth) []types.CalendarMonth {
 			}
 		}
 	}
+
+	for i := range data {
+		for j := 0; j < len(data[i].Days)-1; j++ {
+			for k := 0; k < len(data[i].Days)-j-1; k++ {
+				date1, _ := strconv.Atoi(data[i].Days[k].Date)
+				date2, _ := strconv.Atoi(data[i].Days[k+1].Date)
+				if date1 > date2 {
+					data[i].Days[k], data[i].Days[k+1] = data[i].Days[k+1], data[i].Days[k]
+				}
+			}
+		}
+	}
+
 	return data
 }
