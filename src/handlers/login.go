@@ -88,8 +88,17 @@ func (lf *LoginFetcher) CampusLogin(username, password string) (*LoginResponse, 
 		return nil, err
 	}
 
+	fmt.Println(resp.StatusCode())
 	if resp.StatusCode() != fasthttp.StatusOK {
-		return lf.Login(user, password)
+		return &LoginResponse{
+			Authenticated: false,
+			Session:       nil,
+			Lookup:        nil,
+			Cookies:       "",
+			Status:        resp.StatusCode(),
+			Message:       "Invalid credentials",
+			Errors:        nil,
+		}, nil
 	}
 
 	var session Session
@@ -97,14 +106,14 @@ func (lf *LoginFetcher) CampusLogin(username, password string) (*LoginResponse, 
 		return nil, err
 	}
 
-	statusCodes := map[string]int{
-		"password": session.PassResponse.StatusCode,
-		"lookup":   session.PostResponse.StatusCode,
-	}
+	// statusCodes := map[string]int{
+	// 	"password": session.PassResponse.StatusCode,
+	// 	"lookup":   session.PostResponse.StatusCode,
+	// }
 
-	if !strings.HasPrefix(fmt.Sprint(statusCodes["password"]), "2") || !strings.HasPrefix(fmt.Sprint(statusCodes["lookup"]), "2") {
-		return lf.Login(user, password)
-	}
+	// if !strings.HasPrefix(fmt.Sprint(statusCodes["password"]), "2") || !strings.HasPrefix(fmt.Sprint(statusCodes["lookup"]), "2") {
+	// 	return lf.Login(user, password)
+	// }
 
 	return &LoginResponse{
 		Authenticated: true,
