@@ -212,12 +212,13 @@ func (lf *LoginFetcher) Login(username, password string) (*LoginResponse, error)
 	}
 
 	sessionBody := map[string]interface{}{
-		"success": !session["message"].(bool),
+		"success": true,
 		"code":    session["passwordauth"].(map[string]interface{})["code"],
 		"message": session["message"],
 	}
 
 	if strings.Contains(strings.ToLower(session["message"].(string)), "invalid") || strings.Contains(session["cookies"].(string), "undefined") {
+		sessionBody["success"] = false
 		return &LoginResponse{
 			Authenticated: false,
 			Session:       sessionBody,
