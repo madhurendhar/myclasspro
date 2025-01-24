@@ -194,7 +194,7 @@ func main() {
 		}
 
 		lf := &handlers.LoginFetcher{}
-		session, err := lf.CampusLogin(creds.Username, creds.Password)
+		session, err := lf.Login(creds.Username, creds.Password)
 		if err != nil {
 			return err
 		}
