@@ -110,7 +110,9 @@ func (a *AcademicsFetch) ScrapeAttendance(html string) (*types.AttendanceRespons
 
 	var attendances []types.Attendance
 	rows.Each(func(i int, s *goquery.Selection) {
-		if i%8 == 0 {
+
+		courseCode := s.Text()
+		if matched, _ := regexp.MatchString(`^\d.*`, courseCode); len(courseCode) > 10 && matched || strings.Contains(strings.ToLower(courseCode), "regular") {
 			conducted := s.NextAll().Eq(4).Text()
 			absent := s.NextAll().Eq(5).Text()
 
@@ -247,4 +249,3 @@ func (a *AcademicsFetch) ScrapeMarks(html string) (*types.MarksResponse, error) 
 		Status:    200,
 	}, nil
 }
-
