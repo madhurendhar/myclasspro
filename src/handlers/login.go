@@ -43,7 +43,7 @@ func (lf *LoginFetcher) Logout(token string) (map[string]interface{}, error) {
 	resp := fasthttp.AcquireResponse()
 	defer fasthttp.ReleaseResponse(resp)
 
-	req.SetRequestURI("https://campuswebapi.up.railway.app/api/auth/logoutuser/")
+	req.SetRequestURI("https://campusapi.fly.dev/api/auth/logoutuser/")
 	req.Header.SetMethod("GET")
 	req.Header.Set("Accept", "*/*")
 	req.Header.Set("Accept-Language", "en-US,en;q=0.5")
@@ -75,7 +75,7 @@ func (lf *LoginFetcher) CampusLogin(username, password string) (*LoginResponse, 
 	resp := fasthttp.AcquireResponse()
 	defer fasthttp.ReleaseResponse(resp)
 
-	req.SetRequestURI("https://campuswebapi.up.railway.app/api/auth/login/")
+	req.SetRequestURI("https://campusapi.fly.dev/api/auth/login/")
 	req.Header.SetMethod("POST")
 	req.Header.Set("accept", "*/*")
 	req.Header.Set("priority", "u=1, i")
