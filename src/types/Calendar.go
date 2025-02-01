@@ -13,10 +13,11 @@ type CalendarMonth struct {
 }
 
 type CalendarResponse struct {
+	Error    bool            `json:"error"`
+	Message  string          `json:"message,omitempty"`
+	Status   int             `json:"status"`
 	Today    *Day            `json:"today"`
+	Tomorrow *Day            `json:"tomorrow"` // Add this line
 	Index    int             `json:"index"`
 	Calendar []CalendarMonth `json:"calendar"`
-	Status   int             `json:"status"`
-	Error    bool            `json:"error,omitempty"`
-	Message  string          `json:"message,omitempty"`
 }
