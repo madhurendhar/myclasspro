@@ -113,13 +113,26 @@ func (h *CalendarDatabaseHelper) GetEvents() (types.CalendarResponse, error) {
 		monthIndex = 0
 	}
 
-	var today *types.Day
-	if len(monthEntry.Days) >= date.Day() {
-		today = &monthEntry.Days[date.Day()-1]
+	var today, tomorrow *types.Day
+	if len(monthEntry.Days) > 0 {
+		todayIndex := time.Now().Day() - 1
+		if todayIndex >= 0 && todayIndex < len(monthEntry.Days) {
+			today = &monthEntry.Days[todayIndex]
+
+			// Get tomorrow's date
+			tomorrowIndex := todayIndex + 1
+			if tomorrowIndex < len(monthEntry.Days) {
+				tomorrow = &monthEntry.Days[tomorrowIndex]
+			} else if monthIndex+1 < len(sortedData) && len(sortedData[monthIndex+1].Days) > 0 {
+				// If tomorrow is in the next month
+				tomorrow = &sortedData[monthIndex+1].Days[0]
+			}
+		}
 	}
 
 	resp := types.CalendarResponse{
 		Today:    today,
+		Tomorrow: tomorrow,
 		Index:    monthIndex,
 		Calendar: sortedData,
 		Status:   200,
