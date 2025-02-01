@@ -111,7 +111,7 @@ func (lf *LoginFetcher) CampusLogin(username, password string) (*LoginResponse, 
 		"lookup":   session.PostResponse.StatusCode,
 	}
 
-	if statusCodes["password"] != fasthttp.StatusOK || statusCodes["lookup"] != fasthttp.StatusOK {
+	if !strings.HasPrefix(fmt.Sprint(statusCodes["password"]), "2") || !strings.HasPrefix(fmt.Sprint(statusCodes["lookup"]), "2") {
 		return &LoginResponse{
 			Authenticated: false,
 			Session: map[string]interface{}{
