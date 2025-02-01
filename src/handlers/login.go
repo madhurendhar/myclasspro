@@ -106,10 +106,28 @@ func (lf *LoginFetcher) CampusLogin(username, password string) (*LoginResponse, 
 		return nil, err
 	}
 
-	// statusCodes := map[string]int{
-	// 	"password": session.PassResponse.StatusCode,
-	// 	"lookup":   session.PostResponse.StatusCode,
-	// }
+	statusCodes := map[string]int{
+		"password": session.PassResponse.StatusCode,
+		"lookup":   session.PostResponse.StatusCode,
+	}
+
+	if statusCodes["password"] != fasthttp.StatusOK || statusCodes["lookup"] != fasthttp.StatusOK {
+		return &LoginResponse{
+			Authenticated: false,
+			Session: map[string]interface{}{
+				"postResponse": session.PostResponse,
+				"passResponse": session.PassResponse,
+			},
+			Lookup: map[string]string{
+				"identifier": session.PostResponse.Lookup.Identifier,
+				"digest":     session.PostResponse.Lookup.Digest,
+			},
+			Cookies: session.Cookies,
+			Status:        statusCodes["password"],
+			Message:       "Invalid Credentials",
+			Errors:        []string{session.Errors},
+		}, nil
+	}
 
 	// if !strings.HasPrefix(fmt.Sprint(statusCodes["password"]), "2") || !strings.HasPrefix(fmt.Sprint(statusCodes["lookup"]), "2") {
 	// 	return lf.Login(user, password)
