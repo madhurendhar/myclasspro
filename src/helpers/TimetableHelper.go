@@ -148,48 +148,65 @@ func uniqueRooms(slots []types.TableSlot) []string {
 }
 
 func (t *Timetable) mapWithFallback(subjects types.CourseResponse) *types.TimetableResult {
-	batches := []types.Batch{batch1, batch2}
+    batches := []types.Batch{batch1, batch2}
 
-	for _, batch := range batches {
-		mappedSchedule := t.mapSlotsToSubjects(batch, subjects.Courses)
+    for _, batch := range batches {
+        // First, check if this batch has any practical slots
+        hasPracticals := false
+        for _, daySlot := range batch.Slots {
+            for _, slot := range daySlot.Slots {
+                if strings.HasPrefix(slot, "P") {
+                    hasPracticals = true
+                    break
+                }
+            }
+            if hasPracticals {
+                break
+            }
+        }
 
-		// Check if this batch contains relevant slots
-		containsRelevantSlots := false
-		for _, course := range subjects.Courses {
-			if strings.HasPrefix(course.Slot, "P") {
-				for _, day := range batch.Slots {
-					for _, slot := range day.Slots {
-						if strings.Contains(course.Slot, "-") {
-							courseSlots := t.getSlotsFromRange(course.Slot)
-							for _, courseSlot := range courseSlots {
-								if courseSlot == slot {
-									containsRelevantSlots = true
-									break
-								}
-							}
-						} else if course.Slot == slot {
-							containsRelevantSlots = true
-							break
-						}
-					}
-					if containsRelevantSlots {
-						break
-					}
-				}
-			}
-			if containsRelevantSlots {
-				break
-			}
-		}
+        // Skip this batch if it has no practicals but courses have practical slots
+        hasPracticalCourses := false
+        for _, course := range subjects.Courses {
+            if strings.HasPrefix(course.Slot, "P") {
+                hasPracticalCourses = true
+                break
+            }
+        }
+        if hasPracticalCourses && !hasPracticals {
+            continue
+        }
 
-		if containsRelevantSlots {
-			return &types.TimetableResult{
-				RegNumber: subjects.RegNumber,
-				Batch:     batch.Batch,
-				Schedule:  mappedSchedule,
-			}
-		}
-	}
+        mappedSchedule := t.mapSlotsToSubjects(batch, subjects.Courses)
 
-	return nil
+        // Rest of the existing slot matching logic
+        for _, course := range subjects.Courses {
+            if !strings.HasPrefix(course.Slot, "P") {
+                continue
+            }
+
+            var courseSlots []string
+            if strings.Contains(course.Slot, "-") {
+                courseSlots = t.getSlotsFromRange(course.Slot)
+            } else {
+                courseSlots = []string{course.Slot}
+            }
+
+            for _, courseSlot := range courseSlots {
+                for _, daySlot := range batch.Slots {
+                    for _, slot := range daySlot.Slots {
+                        if courseSlot == slot {
+                            return &types.TimetableResult{
+                                RegNumber: subjects.RegNumber,
+                                Batch:     batch.Batch,
+                                Schedule:  mappedSchedule,
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    return nil
 }
