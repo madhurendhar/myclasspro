@@ -89,6 +89,11 @@ func main() {
 			return c.Next()
 		}
 
+		// Skip authorization in development mode
+		if os.Getenv("GO_ENV") == "development" {
+			return c.Next()
+		}
+
 		token := c.Get("Authorization")
 		if token == "" || (!strings.HasPrefix(token, "Bearer ") && !strings.HasPrefix(token, "Token ")) {
 			return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
