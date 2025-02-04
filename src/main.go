@@ -309,7 +309,12 @@ func main() {
 			return err
 		}
 
-		if len(cachedData) != 0 {
+		// Check if cached data exists and all required fields are present and non-empty
+		if len(cachedData) != 0 &&
+			cachedData["timetable"] != nil &&
+			cachedData["attendance"] != nil &&
+			cachedData["marks"] != nil {
+			log.Println("Cache hit")
 			go func() {
 				data, err := fetchAllData(token)
 				if err != nil {
