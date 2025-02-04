@@ -21,6 +21,7 @@ import (
 	"github.com/gofiber/fiber/v2/middleware/etag"
 	"github.com/gofiber/fiber/v2/middleware/limiter"
 	"github.com/gofiber/fiber/v2/middleware/recover"
+	"github.com/joho/godotenv"
 )
 
 func main() {
@@ -90,6 +91,7 @@ func main() {
 		}
 
 		// Skip authorization in development mode
+		godotenv.Load()
 		if os.Getenv("GO_ENV") == "development" {
 			return c.Next()
 		}
@@ -310,10 +312,7 @@ func main() {
 
 		cachedData, err := db.FindByToken("goscrape", encodedToken)
 
-		if err != nil {
-			return err
-		}
-
+		fmt.Println("CACHE", cachedData, len(cachedData))
 		// Check if cached data exists and all required fields are present and non-empty
 		if len(cachedData) != 0 &&
 			cachedData["timetable"] != nil &&

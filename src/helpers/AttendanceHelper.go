@@ -88,9 +88,11 @@ func (a *AcademicsFetch) GetMarks() (*types.MarksResponse, error) {
 func (a *AcademicsFetch) ScrapeAttendance(html string) (*types.AttendanceResponse, error) {
 	re := regexp.MustCompile(`RA2\d{12}`)
 	regNumber := re.FindString(html)
+	fmt.Println()
 	html = strings.ReplaceAll(html, "<td  bgcolor='#E6E6FA' style='text-align:center'> - </td>", "")
 	html = strings.Split(html, `<table style="font-size :16px;" border="1" align="center" cellpadding="1" cellspacing="1" bgcolor="#FAFAD2">`)[1]
 	html = strings.Split(html, "</table>")[0]
+
 
 	html = `<table style="font-size :16px;" border="1" align="center" cellpadding="1" cellspacing="1" bgcolor="#FAFAD2">` + html + "</table>"
 
