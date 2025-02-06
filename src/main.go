@@ -312,7 +312,6 @@ func main() {
 
 		cachedData, err := db.FindByToken("goscrape", encodedToken)
 
-		fmt.Println("CACHE", cachedData, len(cachedData))
 		// Check if cached data exists and all required fields are present and non-empty
 		if len(cachedData) != 0 &&
 			cachedData["timetable"] != nil &&

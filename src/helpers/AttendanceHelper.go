@@ -88,11 +88,9 @@ func (a *AcademicsFetch) GetMarks() (*types.MarksResponse, error) {
 func (a *AcademicsFetch) ScrapeAttendance(html string) (*types.AttendanceResponse, error) {
 	re := regexp.MustCompile(`RA2\d{12}`)
 	regNumber := re.FindString(html)
-	fmt.Println()
 	html = strings.ReplaceAll(html, "<td  bgcolor='#E6E6FA' style='text-align:center'> - </td>", "")
 	html = strings.Split(html, `<table style="font-size :16px;" border="1" align="center" cellpadding="1" cellspacing="1" bgcolor="#FAFAD2">`)[1]
 	html = strings.Split(html, "</table>")[0]
-
 
 	html = `<table style="font-size :16px;" border="1" align="center" cellpadding="1" cellspacing="1" bgcolor="#FAFAD2">` + html + "</table>"
 
@@ -150,10 +148,6 @@ func (a *AcademicsFetch) ScrapeAttendance(html string) (*types.AttendanceRespons
 }
 
 func (a *AcademicsFetch) ScrapeMarks(html string) (*types.MarksResponse, error) {
-	doc, err := goquery.NewDocumentFromReader(strings.NewReader(html))
-	if err != nil {
-		return nil, fmt.Errorf("failed to parse HTML: %v", err)
-	}
 
 	attResp, err := a.ScrapeAttendance(html)
 	if err != nil {
@@ -166,72 +160,86 @@ func (a *AcademicsFetch) ScrapeMarks(html string) (*types.MarksResponse, error) 
 	}
 
 	var marks []types.Mark
-	tables := doc.Find("table[cellpadding='1'][cellspacing='1']")
+	html = strings.Split(html, `<table border="1" align="center" cellpadding="1" cellspacing="1">`)[1]
+	html = strings.Split(html, `<table  width=800px;"border="0"cellspacing="1"cellpadding="1">`)[0]
+	html = strings.Split(html, `<br />`)[0]
 
-	var targetTable *goquery.Selection
-	tables.Each(func(i int, s *goquery.Selection) {
-		if i == 1 && len(s.Text()) > 700 {
-			targetTable = s
-		} else if i == 2 && (targetTable == nil || len(targetTable.Text()) < 700) {
-			targetTable = s
-		}
-	})
+	html = `<table border="1" align="center" cellpadding="1" cellspacing="1">` + html
 
-	if targetTable == nil {
-		fmt.Println("No marks data found")
-		return &types.MarksResponse{RegNumber: attResp.RegNumber, Marks: []types.Mark{}}, nil
+	doc, err := goquery.NewDocumentFromReader(strings.NewReader(html))
+	if err != nil {
+		return nil, fmt.Errorf("failed to parse HTML: %v", err)
 	}
 
-	targetTable.Find("tr").Each(func(i int, row *goquery.Selection) {
-		if i == 0 {
-			return
-		}
+	html, _ = doc.Html()
+	html = strings.ReplaceAll(html, `<table style="font-size" :6;="" border="2" cellpadding="1" cellspacing="1"><tbody><tr><td>`, "")
+	html = strings.ReplaceAll(html, `</td></tr>`, "")
+	rowsTables := strings.Split(html, `</table></td>`)
+	if len(rowsTables) == 0 {
+		return &types.MarksResponse{
+			RegNumber: attResp.RegNumber,
+			Marks:     []types.Mark{},
+			Status:    200,
+		}, nil
+	}
 
-		cells := row.Find("td")
-		if cells.Length() < 3 {
-			return
-		}
+	htmlTables := make([]*goquery.Document, len(rowsTables))
+	for i, table := range rowsTables {
+		htmlTables[i], _ = goquery.NewDocumentFromReader(strings.NewReader(table))
+	}
 
-		courseCode := strings.TrimSpace(cells.Eq(0).Text())
-		courseType := strings.TrimSpace(cells.Eq(1).Text())
+	for _, table := range htmlTables {
+		table.Find("tr").Each(func(i int, row *goquery.Selection) {
+			
+			cells := row.Find("td")
+			courseCode := strings.TrimSpace(cells.Eq(0).Text())
+			courseType := strings.TrimSpace(cells.Eq(1).Text())
 
-		var testPerformance []types.TestPerformance
-		var overallScored, overallTotal float64
+			var testPerformance []types.TestPerformance
+			var overallScored, overallTotal float64
 
-		cells.Eq(2).Find("table td").Each(func(i int, testCell *goquery.Selection) {
-			testText := strings.Split(strings.TrimSpace(testCell.Text()), "\n")
-			if len(testText) >= 2 {
-				testNameParts := strings.Split(testText[0], "/")
-				testTitle := testNameParts[0]
-				total := utils.ParseFloat(testNameParts[1])
-				scored := utils.ParseFloat(testText[1])
 
-				testPerformance = append(testPerformance, types.TestPerformance{
-					Test: testTitle,
-					Marks: types.MarksDetail{
-						Scored: fmt.Sprintf("%.2f", scored),
-						Total:  fmt.Sprintf("%.2f", total),
-					},
-				})
+			cells.Eq(2).Find("table td").Each(func(i int, testCell *goquery.Selection) {
+				testText := strings.Split(strings.TrimSpace(testCell.Text()), ".00")
 
-				overallScored += scored
-				overallTotal += total
+				if len(testText) >= 2 {
+					testNameParts := strings.Split(testText[0], "/")
+					testTitle := testNameParts[0]
+					total := utils.ParseFloat(testNameParts[1])
+					scored := utils.ParseFloat(testText[1])
+
+					testPerformance = append(testPerformance, types.TestPerformance{
+						Test: testTitle,
+						Marks: types.MarksDetail{
+							Scored: func() string {
+								if testText[1] == "Abs" {
+									return "Abs"
+								}
+								return fmt.Sprintf("%.2f", scored)
+							}(),
+							Total:  fmt.Sprintf("%.2f", total),
+						},
+					})
+
+					overallScored += scored
+					overallTotal += total
+				}
+			})
+
+			mark := types.Mark{
+				CourseName: courseMap[courseCode],
+				CourseCode: courseCode,
+				CourseType: courseType,
+				Overall: types.MarksDetail{
+					Scored: fmt.Sprintf("%.2f", overallScored),
+					Total:  fmt.Sprintf("%.2f", overallTotal),
+				},
+				TestPerformance: testPerformance,
 			}
+
+			marks = append(marks, mark)
 		})
-
-		mark := types.Mark{
-			CourseName: courseMap[courseCode],
-			CourseCode: courseCode,
-			CourseType: courseType,
-			Overall: types.MarksDetail{
-				Scored: fmt.Sprintf("%.2f", overallScored),
-				Total:  fmt.Sprintf("%.2f", overallTotal),
-			},
-			TestPerformance: testPerformance,
-		}
-
-		marks = append(marks, mark)
-	})
+	}
 
 	var sortedMarks []types.Mark
 	for _, mark := range marks {
