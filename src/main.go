@@ -21,7 +21,7 @@ import (
 	"github.com/gofiber/fiber/v2/middleware/etag"
 	"github.com/gofiber/fiber/v2/middleware/limiter"
 	"github.com/gofiber/fiber/v2/middleware/recover"
-	"github.com/joho/godotenv"
+	// "github.com/joho/godotenv"
 )
 
 func main() {
@@ -91,10 +91,10 @@ func main() {
 		}
 
 		// Skip authorization in development mode
-		godotenv.Load()
-		if os.Getenv("GO_ENV") == "development" {
-			return c.Next()
-		}
+		// godotenv.Load()
+		// if os.Getenv("GO_ENV") == "development" {
+		// 	return c.Next()
+		// }
 
 		token := c.Get("Authorization")
 		if token == "" || (!strings.HasPrefix(token, "Bearer ") && !strings.HasPrefix(token, "Token ")) {
