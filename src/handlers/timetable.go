@@ -3,11 +3,22 @@ package handlers
 import (
 	"goscraper/src/helpers"
 	"goscraper/src/types"
+	"strconv"
 )
 
 func GetTimetable(token string) (*types.TimetableResult, error) {
 	scraper := helpers.NewTimetable(token)
-	timetable, err := scraper.GetTimetable()
+	user, err := GetUser(token)
+	if err != nil {
+		return &types.TimetableResult{}, err
+	}
+
+	batchNum, err := strconv.Atoi(user.Batch)
+	if err != nil {
+		return &types.TimetableResult{}, err
+	}
+
+	timetable, err := scraper.GetTimetable(batchNum)
 
 	return timetable, err
 }
