@@ -25,8 +25,13 @@ import (
 )
 
 func main() {
+	prefork := os.Getenv("PREFORK")
+	if prefork == "" {
+		prefork = "true"
+	}
+
 	app := fiber.New(fiber.Config{
-		Prefork:      true,
+		Prefork:      prefork == "true",
 		ServerHeader: "GoScraper",
 		AppName:      "GoScraper v3.0",
 		JSONEncoder:  json.Marshal,
@@ -43,7 +48,7 @@ func main() {
 	app.Use(etag.New())
 
 	app.Use(cors.New(cors.Config{
-		AllowOrigins:     "https://class-pro.vercel.app, http://localhost:243, https://apro-beta.vercel.app",
+		AllowOrigins:     "https://class-pro.vercel.app, https://srmclasspro.netlify.app, http://localhost:243",
 		AllowMethods:     "GET,POST,PUT,DELETE,OPTIONS",
 		AllowHeaders:     "Origin,Content-Type,Accept,X-CSRF-Token,Authorization",
 		ExposeHeaders:    "Content-Length",
@@ -356,7 +361,7 @@ func main() {
 
 	port := os.Getenv("PORT")
 	if port == "" {
-		port = "8008"
+		port = "8080"
 	}
 	log.Printf("Starting server on port %s...", port)
 	if err := app.Listen("0.0.0.0:" + port); err != nil {
