@@ -29,10 +29,10 @@ type Session struct {
 type LoginResponse struct {
 	Authenticated bool                   `json:"authenticated"`
 	Session       map[string]interface{} `json:"session"`
-	Lookup        map[string]string      `json:"lookup"`
+	Lookup        any                    `json:"lookup"`
 	Cookies       string                 `json:"cookies"`
 	Status        int                    `json:"status"`
-	Message       string                 `json:"message"`
+	Message       any                 `json:"message"`
 	Errors        []string               `json:"errors"`
 }
 
@@ -43,14 +43,17 @@ func (lf *LoginFetcher) Logout(token string) (map[string]interface{}, error) {
 	resp := fasthttp.AcquireResponse()
 	defer fasthttp.ReleaseResponse(resp)
 
-	req.SetRequestURI("https://campusapi.fly.dev/api/auth/logoutuser/")
-	req.Header.SetMethod("GET")
-	req.Header.Set("Accept", "*/*")
-	req.Header.Set("Accept-Language", "en-US,en;q=0.5")
-	req.Header.Set("x-csrf-token", token)
-	req.Header.Set("Sec-Fetch-Site", "cross-site")
-	req.Header.Set("Cache-Control", "private, max-age=120, stale-while-revalidate=1200, must-revalidate")
-	req.Header.Set("Referer", "https://campusweb.vercel.app/")
+	req.SetRequestURI("https://academia.srmist.edu.in/accounts/p/10002227248/logout?servicename=ZohoCreator&serviceurl=https://academia.srmist.edu.in")
+    req.Header.SetMethod("GET")
+    req.Header.Set("Accept-Language", "en-US,en;q=0.9")
+    req.Header.Set("Connection", "keep-alive")
+    req.Header.Set("DNT", "1")
+    req.Header.Set("Referer", "https://academia.srmist.edu.in/")
+    req.Header.Set("Sec-Fetch-Dest", "document")
+    req.Header.Set("Sec-Fetch-Mode", "navigate")
+    req.Header.Set("Sec-Fetch-Site", "same-origin")
+    req.Header.Set("Upgrade-Insecure-Requests", "1")
+    req.Header.Set("Cookie", token)
 
 	if err := fasthttp.Do(req, resp); err != nil {
 		return nil, err
@@ -65,94 +68,8 @@ func (lf *LoginFetcher) Logout(token string) (map[string]interface{}, error) {
 	return result, nil
 }
 
-func (lf *LoginFetcher) CampusLogin(username, password string) (*LoginResponse, error) {
-	user := strings.Replace(username, "@srmist.edu.in", "", 1)
-	body := fmt.Sprintf(`{"username":"%s@srmist.edu.in","password":"%s"}`, user, password)
-
-	req := fasthttp.AcquireRequest()
-	defer fasthttp.ReleaseRequest(req)
-
-	resp := fasthttp.AcquireResponse()
-	defer fasthttp.ReleaseResponse(resp)
-
-	req.SetRequestURI("https://campusapi.fly.dev/api/auth/login/")
-	req.Header.SetMethod("POST")
-	req.Header.Set("accept", "*/*")
-	req.Header.Set("priority", "u=1, i")
-	req.Header.Set("Referer", "https://campusweb.vercel.app/")
-	req.Header.Set("Referrer-Policy", "strict-origin-when-cross-origin")
-	req.Header.Set("Content-Type", "application/json")
-	req.SetBody([]byte(body))
-
-	if err := fasthttp.Do(req, resp); err != nil {
-		return nil, err
-	}
-
-	fmt.Println(resp.StatusCode())
-	if resp.StatusCode() != fasthttp.StatusOK {
-		return &LoginResponse{
-			Authenticated: false,
-			Session:       nil,
-			Lookup:        nil,
-			Cookies:       "",
-			Status:        resp.StatusCode(),
-			Message:       "Invalid credentials",
-			Errors:        nil,
-		}, nil
-	}
-
-	var session Session
-	if err := json.Unmarshal(resp.Body(), &session); err != nil {
-		return nil, err
-	}
-
-	statusCodes := map[string]int{
-		"password": session.PassResponse.StatusCode,
-		"lookup":   session.PostResponse.StatusCode,
-	}
-
-	if !strings.HasPrefix(fmt.Sprint(statusCodes["password"]), "2") || !strings.HasPrefix(fmt.Sprint(statusCodes["lookup"]), "2") {
-		return &LoginResponse{
-			Authenticated: false,
-			Session: map[string]interface{}{
-				"postResponse": session.PostResponse,
-				"passResponse": session.PassResponse,
-			},
-			Lookup: map[string]string{
-				"identifier": session.PostResponse.Lookup.Identifier,
-				"digest":     session.PostResponse.Lookup.Digest,
-			},
-			Cookies: session.Cookies,
-			Status:        statusCodes["password"],
-			Message:       "Invalid Credentials",
-			Errors:        []string{session.Errors},
-		}, nil
-	}
-
-	// if !strings.HasPrefix(fmt.Sprint(statusCodes["password"]), "2") || !strings.HasPrefix(fmt.Sprint(statusCodes["lookup"]), "2") {
-	// 	return lf.Login(user, password)
-	// }
-
-	return &LoginResponse{
-		Authenticated: true,
-		Session: map[string]interface{}{
-			"postResponse": session.PostResponse,
-			"passResponse": session.PassResponse,
-		},
-		Lookup: map[string]string{
-			"identifier": session.PostResponse.Lookup.Identifier,
-			"digest":     session.PostResponse.Lookup.Digest,
-		},
-		Cookies: session.Cookies,
-		Status:  session.PassResponse.StatusCode,
-		Message: session.Message,
-		Errors:  []string{session.Errors},
-	}, nil
-}
-
 func (lf *LoginFetcher) Login(username, password string) (*LoginResponse, error) {
 	user := strings.Replace(username, "@srmist.edu.in", "", 1)
-	fmt.Println(user)
 
 	url := fmt.Sprintf("https://academia.srmist.edu.in/accounts/p/40-10002227248/signin/v2/lookup/%s@srmist.edu.in", user)
 
@@ -231,7 +148,6 @@ func (lf *LoginFetcher) Login(username, password string) (*LoginResponse, error)
 		}, nil
 	}
 
-	fmt.Println(data)
 	lookup, ok := data["lookup"].(map[string]interface{})
 	if !ok {
 		return nil, fmt.Errorf("invalid lookup data")
@@ -264,33 +180,14 @@ func (lf *LoginFetcher) Login(username, password string) (*LoginResponse, error)
 		}, nil
 	}
 
-	fmt.Println(session)
-	if strings.Contains(strings.ToLower(session["message"].(string)), "hip") || strings.Contains(strings.ToLower(session["localized_message"].(string)), "captcha") || session["cdigest"] != nil {
-		return &LoginResponse{
-			Authenticated: false,
-			Session:       nil,
-			Lookup: map[string]string{
-				"identifier": lookup["identifier"].(string),
-				"digest":     lookup["digest"].(string),
-			},
-			Cookies: "",
-			Status:  int(session["status_code"].(float64)),
-			Message: session["localized_message"].(string),
-			Errors:  nil,
-		}, nil
-	}
-
 	return &LoginResponse{
 		Authenticated: true,
 		Session:       sessionBody,
-		Lookup: map[string]string{
-			"identifier": lookup["identifier"].(string),
-			"digest":     lookup["digest"].(string),
-		},
-		Cookies: session["cookies"].(string),
-		Status:  int(data["status_code"].(float64)),
-		Message: data["message"].(string),
-		Errors:  nil,
+		Lookup:        lookup,
+		Cookies:       session["cookies"].(string),
+		Status:        int(data["status_code"].(float64)),
+		Message:       data["message"],
+		Errors:        nil,
 	}, nil
 }
 

@@ -8,7 +8,7 @@ import (
 )
 
 func HandleError(c *fiber.Ctx, err error) error {
-	fmt.Println("Im handling: ", err)
+	fmt.Println("Error handling: ", err)
 	if err != nil && (strings.Contains(err.Error(), "invalid response format") ||
 		strings.Contains(err.Error(), "invalid token format")) {
 		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{

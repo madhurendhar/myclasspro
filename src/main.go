@@ -21,10 +21,11 @@ import (
 	"github.com/gofiber/fiber/v2/middleware/etag"
 	"github.com/gofiber/fiber/v2/middleware/limiter"
 	"github.com/gofiber/fiber/v2/middleware/recover"
-	// "github.com/joho/godotenv"
+	"github.com/joho/godotenv"
 )
 
 func main() {
+	godotenv.Load()
 	prefork := os.Getenv("PREFORK")
 	if prefork == "" {
 		prefork = "true"
@@ -46,6 +47,7 @@ func main() {
 		Level: compress.LevelBestSpeed,
 	}))
 	app.Use(etag.New())
+
 	urls := os.Getenv("URL")
 
 	app.Use(cors.New(cors.Config{
@@ -97,10 +99,10 @@ func main() {
 		}
 
 		// Skip authorization in development mode
-		// godotenv.Load()
-		// if os.Getenv("GO_ENV") == "development" {
-		// 	return c.Next()
-		// }
+		godotenv.Load()
+		if os.Getenv("GO_ENV") == "development" {
+			return c.Next()
+		}
 
 		token := c.Get("Authorization")
 		if token == "" || (!strings.HasPrefix(token, "Bearer ") && !strings.HasPrefix(token, "Token ")) {
@@ -207,7 +209,7 @@ func main() {
 		}
 
 		lf := &handlers.LoginFetcher{}
-		session, err := lf.CampusLogin(creds.Username, creds.Password)
+		session, err := lf.Login(creds.Username, creds.Password)
 		if err != nil {
 			return err
 		}
@@ -323,7 +325,6 @@ func main() {
 			cachedData["timetable"] != nil &&
 			cachedData["attendance"] != nil &&
 			cachedData["marks"] != nil {
-			log.Println("Cache hit")
 			go func() {
 				data, err := fetchAllData(token)
 				if err != nil {
