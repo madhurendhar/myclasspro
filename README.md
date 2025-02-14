@@ -33,9 +33,14 @@ URL=""
    go mod tidy
    ```
 
-3. **Run the application:**
+3. **Development Run the application:** (DEV SERVER)
    ```
    go run main.go
+   ```
+
+3. **Build and Run the application:** (BUILD SERVER)
+   ```
+   go build main.go
    ./main
    ```
 
