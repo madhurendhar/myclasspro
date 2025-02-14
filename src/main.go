@@ -46,9 +46,10 @@ func main() {
 		Level: compress.LevelBestSpeed,
 	}))
 	app.Use(etag.New())
+	urls := os.Getenv("URL")
 
 	app.Use(cors.New(cors.Config{
-		AllowOrigins:     "https://class-pro.vercel.app, https://srmclasspro.netlify.app, http://localhost:243",
+		AllowOrigins:     urls + ", http://localhost:243",
 		AllowMethods:     "GET,POST,PUT,DELETE,OPTIONS",
 		AllowHeaders:     "Origin,Content-Type,Accept,X-CSRF-Token,Authorization",
 		ExposeHeaders:    "Content-Length",
