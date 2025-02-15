@@ -51,6 +51,34 @@ create table public.gocal (
 );
 ```
 
+### CRON Jobs
+> [!WARNING]
+> Install CRON Integration in supabase
+> <img width="891" alt="image" src="https://github.com/user-attachments/assets/ad98da2f-f84c-43a9-8d87-8c512cdcaaa3" />
+
+
+- Deleting old user data
+```
+  UPDATE goscrape
+  SET "user" = NULL, timetable = NULL, attendance = NULL, marks = NULL, courses = NULL
+  WHERE "lastUpdated" < (EXTRACT(EPOCH FROM NOW()) * 1000) - (12 * 60 * 60 * 1000);
+```
+
+- Deleting old calendar
+```
+CREATE OR REPLACE FUNCTION delete_from_gocal()
+RETURNS void AS $$
+BEGIN
+    DELETE FROM gocal;
+END;
+$$ LANGUAGE plpgsql SECURITY INVOKER;
+
+select
+  cron.schedule (
+    '0 0 * * *',
+    'SELECT delete_old_calendar_events()'
+  );
+```
 ---
 
 ## Setup Instructions
