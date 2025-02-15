@@ -51,6 +51,29 @@ create table public.gocal (
 );
 ```
 
+### CRON Jobs
+- Deleting old user data
+```
+  UPDATE goscrape
+  SET "user" = NULL, timetable = NULL, attendance = NULL, marks = NULL, courses = NULL
+  WHERE "lastUpdated" < (EXTRACT(EPOCH FROM NOW()) * 1000) - (12 * 60 * 60 * 1000);
+```
+
+- Deleting old calendar
+```
+CREATE OR REPLACE FUNCTION delete_from_gocal()
+RETURNS void AS $$
+BEGIN
+    DELETE FROM gocal;
+END;
+$$ LANGUAGE plpgsql SECURITY INVOKER;
+
+select
+  cron.schedule (
+    '0 0 * * *',
+    'SELECT delete_old_calendar_events()'
+  );
+```
 ---
 
 ## Setup Instructions
