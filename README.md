@@ -52,6 +52,11 @@ create table public.gocal (
 ```
 
 ### CRON Jobs
+> [!WARNING]
+> Install CRON Integration in supabase
+> <img width="891" alt="image" src="https://github.com/user-attachments/assets/ad98da2f-f84c-43a9-8d87-8c512cdcaaa3" />
+
+
 - Deleting old user data
 ```
   UPDATE goscrape
