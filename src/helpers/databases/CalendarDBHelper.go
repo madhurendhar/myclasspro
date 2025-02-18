@@ -1,12 +1,14 @@
 package databases
 
 import (
+	"goscraper/src/globals"
 	"goscraper/src/helpers"
 	"goscraper/src/types"
 	"os"
 	"strings"
 	"time"
 
+	"github.com/joho/godotenv"
 	"github.com/supabase-community/supabase-go"
 )
 
@@ -24,6 +26,9 @@ type CalendarDatabaseHelper struct {
 }
 
 func NewCalDBHelper() (*CalendarDatabaseHelper, error) {
+	if globals.DevMode {
+		godotenv.Load()
+	}
 	supabaseUrl := os.Getenv("SUPABASE_URL")
 	supabaseKey := os.Getenv("SUPABASE_KEY")
 

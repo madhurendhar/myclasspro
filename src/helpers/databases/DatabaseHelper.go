@@ -7,10 +7,12 @@ import (
 	"crypto/sha256"
 	"encoding/base64"
 	"encoding/json"
+	"goscraper/src/globals"
 	"io"
 	"os"
 	"time"
 
+	"github.com/joho/godotenv"
 	"github.com/supabase-community/supabase-go"
 )
 
@@ -20,6 +22,9 @@ type DatabaseHelper struct {
 }
 
 func NewDatabaseHelper() (*DatabaseHelper, error) {
+	if globals.DevMode {
+		godotenv.Load()
+	}
 	supabaseUrl := os.Getenv("SUPABASE_URL")
 	supabaseKey := os.Getenv("SUPABASE_KEY")
 	encryptionKey := os.Getenv("ENCRYPTION_KEY")

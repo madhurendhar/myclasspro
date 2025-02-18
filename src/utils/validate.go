@@ -3,11 +3,14 @@ package utils
 import (
 	"encoding/base64"
 	"errors"
+	"goscraper/src/globals"
 	"log"
 	"os"
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/joho/godotenv"
 	// "github.com/joho/godotenv"
 )
 
@@ -46,6 +49,9 @@ func ValidateToken(token string) (*bool, error) {
 }
 
 func ValidateAuth(timestamp string, key string) (*bool, error) {
+	if globals.DevMode {
+		godotenv.Load()
+	}
 	validationKey := os.Getenv("VALIDATION_KEY")
 	if validationKey == "" {
 		log.Println("VALIDATION_KEY is not defined!")

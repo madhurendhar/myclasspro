@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"strings"
 
+	"goscraper/src/globals"
 	"goscraper/src/handlers"
 	"goscraper/src/helpers/databases"
 	"goscraper/src/types"
@@ -25,7 +26,9 @@ import (
 )
 
 func main() {
-	godotenv.Load()
+	if globals.DevMode {
+		godotenv.Load()
+	}
 	prefork := os.Getenv("PREFORK")
 	if prefork == "" {
 		prefork = "true"
@@ -98,9 +101,7 @@ func main() {
 			return c.Next()
 		}
 
-		// Skip authorization in development mode
-		godotenv.Load()
-		if os.Getenv("GO_ENV") == "development" {
+		if globals.DevMode {
 			return c.Next()
 		}
 
