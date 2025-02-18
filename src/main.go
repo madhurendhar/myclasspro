@@ -52,9 +52,13 @@ func main() {
 	app.Use(etag.New())
 
 	urls := os.Getenv("URL")
+	allowedOrigins := "http://localhost:243"
+	if urls != "" {
+		allowedOrigins += "," + urls
+	}
 
 	app.Use(cors.New(cors.Config{
-		AllowOrigins:     urls + ", http://localhost:243",
+		AllowOrigins:     allowedOrigins,
 		AllowMethods:     "GET,POST,PUT,DELETE,OPTIONS",
 		AllowHeaders:     "Origin,Content-Type,Accept,X-CSRF-Token,Authorization",
 		ExposeHeaders:    "Content-Length",
