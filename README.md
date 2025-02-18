@@ -11,6 +11,13 @@ This project is a simple Golang API that fetches HTML content from a specified U
 > - `VALIDATION_KEY` is used to validate the request from front-end, so use the same key as front-end has. a different key will reject requests from your front-end
 >  - `URL` are the urls which the backend should allow to request. **(CORS)**
 
+--- 
+
+### WHEN DEPLOYING
+Go to `globals/DevMode` and set the variable to false
+
+---
+
 ### `.env`
 ```
 SUPABASE_URL=""
