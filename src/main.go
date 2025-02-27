@@ -5,6 +5,7 @@ from datetime import datetime, timedelta
 from flask import Flask, jsonify
 from flask_mail import Mail, Message
 from apscheduler.schedulers.background import BackgroundScheduler
+import threading
 
 app = Flask(__name__)
 
@@ -23,7 +24,7 @@ exam_assignments = []
 def fetch_exam_assignments():
     url = "https://srmist.edu.in/timetable"
     response = requests.get(url)
-    if response.status_code == 200:
+    try:
         data = response.json()
         exam_assignments.clear()
         for item in data.get('timetable', []):
@@ -34,6 +35,8 @@ def fetch_exam_assignments():
                     'date': item['date'],
                     'time': item['time']
                 })
+    except ValueError:
+        print("Failed to parse JSON. Check the URL response.")
 
 # Function to send reminders
 def send_reminders():
@@ -53,7 +56,12 @@ def send_reminders():
 scheduler = BackgroundScheduler()
 scheduler.add_job(fetch_exam_assignments, 'interval', hours=12)
 scheduler.add_job(send_reminders, 'interval', hours=24)
-scheduler.start()
+
+# Start scheduler in a separate thread
+def start_scheduler():
+    scheduler.start()
+
+threading.Thread(target=start_scheduler, daemon=True).start()
 
 @app.route('/exam_assignments', methods=['GET'])
 def get_exam_assignments():
@@ -61,5 +69,7 @@ def get_exam_assignments():
 
 if __name__ == '__main__':
     fetch_exam_assignments()  # Initial Fetch
-    app.run(debug=True)
+    port = int(os.getenv("PORT", 5000))
+    app.run(host="0.0.0.0", port=port, debug=True, threaded=True)
+
 
